@@ -38,6 +38,9 @@ public class RegisterServerController {
                     , heartBeatRequest.getInstanceId());
 
             serviceInstance.renew();
+            //记录每分钟的心跳数，自我保护机制
+            HeartbeatMessuredRate heartbeatMessuredRate = HeartbeatMessuredRate.getInstance();
+            heartbeatMessuredRate.increment();
 
             heartBeatResponce.setStatus(HeartBeatResponce.SUCCESS);
         } catch (Exception e) {
