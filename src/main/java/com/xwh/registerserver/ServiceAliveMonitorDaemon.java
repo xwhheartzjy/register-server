@@ -26,6 +26,13 @@ public class ServiceAliveMonitorDaemon {
 
             while (true) {
                 try {
+
+                    SelfProtectionPolicy selfProtectionPolicy = SelfProtectionPolicy.getInstance();
+                    if (selfProtectionPolicy.isEnabled()) {
+                        Thread.sleep(CHECK_ALIVE_INTERVAL);
+                        continue;
+                    }
+
                     registryMap = registry.getRegistry();
 
                     for (String serviceName : registryMap.keySet()) {
@@ -34,7 +41,12 @@ public class ServiceAliveMonitorDaemon {
                         for (ServiceInstance serviceInstance : instanceMap.values()) {
                             if (!serviceInstance.isAlive()) {
                                 registry.remove(serviceName, serviceInstance.getServiceInstanceId());
-
+                                synchronized (SelfProtectionPolicy.class) {
+                                    SelfProtectionPolicy policy = SelfProtectionPolicy.getInstance();
+                                    policy.setExpectedHeartbeatRate(selfProtectionPolicy.getExpectedHeartbeatRate() - 2);
+                                    policy.setExpectedHeartbeatThreshold(
+                                            (long)(policy.getExpectedHeartbeatRate() * 0.85));
+                                }
                             }
                         }
                     }

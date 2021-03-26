@@ -11,7 +11,9 @@ public class HeartbeatMessuredRate {
     private static HeartbeatMessuredRate instance = new HeartbeatMessuredRate();
 
     private HeartbeatMessuredRate() {
-
+        Daemon daemon = new Daemon();
+        daemon.setDaemon(true);
+        daemon.start();
     }
 
     public static HeartbeatMessuredRate getInstance() {
@@ -27,18 +29,37 @@ public class HeartbeatMessuredRate {
      */
     private long latestMinuteTimestamp = System.currentTimeMillis();
 
-    public synchronized void increment() {
-        long currentTimestamp = System.currentTimeMillis();
-
-        if (currentTimestamp - latestMinuteTimestamp > 60 * 1000) {
-            latestMinuteHeartbeatRate = 0L;
-            this.latestMinuteTimestamp = System.currentTimeMillis();
+    public void increment() {
+        synchronized (HeartbeatMessuredRate.class) {
+            latestMinuteHeartbeatRate++;
         }
-        latestMinuteHeartbeatRate++;
+
     }
 
     public synchronized long get() {
         return this.latestMinuteHeartbeatRate;
+    }
+
+    private class Daemon extends Thread{
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    synchronized (HeartbeatMessuredRate.class) {
+                        long currentTimestamp = System.currentTimeMillis();
+
+                        if (currentTimestamp - latestMinuteTimestamp > 60 * 1000) {
+                            latestMinuteHeartbeatRate = 0L;
+                            latestMinuteTimestamp = System.currentTimeMillis();
+                        }
+                        Thread.sleep(1000);
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
 
