@@ -1,5 +1,7 @@
 package com.xwh.registerserver;
 
+import java.util.Map;
+
 /**
  * 模拟接收请求
  */
@@ -48,6 +50,21 @@ public class RegisterServerController {
             heartBeatResponce.setStatus(HeartBeatResponce.FAILURE);
         }
         return heartBeatResponce;
+    }
+    /**
+     * 拉取服务注册表
+     * @return
+     */
+    public Map<String, Map<String, ServiceInstance>> fetchServiceRegistry() {
+        return registry.getRegistry();
+    }
+
+    /**
+     * 服务下线
+     */
+    public void cancel(String serviceName, String serviceInstanceId) {
+        // 从服务注册中摘除实例
+        registry.remove(serviceName, serviceInstanceId);
     }
 
 
